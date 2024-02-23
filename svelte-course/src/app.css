@@ -1,4 +1,6 @@
 :root {
-  color: white;
-  background-color: rgb(29, 28, 28);
+	--buttonBgColor: #ff3e00;
+	--buttonTextColor: #fff;
+	color: white;
+	background-color: rgb(29, 28, 28);
 }
