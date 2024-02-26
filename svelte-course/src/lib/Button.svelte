@@ -1,10 +1,9 @@
 <script>
-	export let size = 'small';
+	export let size = '';
 	export let shadow = false;
 	export let bgColor = 'inherit';
 	export let textColor = 'inherit';
 
-	console.log($$restProps);
 	let isLeftHovered;
 </script>
 
@@ -43,6 +42,10 @@
 		cursor: pointer;
 		.left-content {
 			margin-right: 10px;
+		}
+		&:disabled {
+			opacity: 0.6;
+			cursor: not-allowed;
 		}
 		&:hover {
 			background-image: linear-gradient(rgba(0, 0, 0, 0.4) 0 0);
