@@ -5,14 +5,50 @@
 	import Button from './Button.svelte';
 	import FaRegTrashAlt from 'svelte-icons/fa/FaRegTrashAlt.svelte';
 	import { afterUpdate, createEventDispatcher } from 'svelte';
+	// import { scale } from 'svelte/transition';
+	import { flip } from 'svelte/animate';
+	import { crossfade, scale } from 'svelte/transition';
+	import { cubicInOut } from 'svelte/easing';
+	// import fade from './transitions/fade.js';
+
+	const [send, receive] = crossfade({
+		delay: 0,
+		duration: 300,
+		fallback: node => scale(node, { start: 0.5, duration: 300 }),
+		// easing: cubicInOut,
+	});
+
+	// function move(item, from, to) {
+	// 	to.push(item);
+	// 	return [from.filter(i => i !== item), to];
+	// }
+
+	// function moveLeft(item) {
+	// 	console.log(item, right, left);
+	// 	[right, left] = move(item, right, left);
+	// }
+
+	// function moveRight(item) {
+	// 	console.log(item);
+	// 	[left, right] = move(item, left, right);
+	// }
 
 	// Exports
 	export let todos = null;
+	let doneTodos;
+	let notDoneTodos;
+
+	$: {
+		doneTodos = todos ? todos.filter(todo => todo.completed) : [];
+		notDoneTodos = todos ? todos.filter(todo => !todo.completed) : [];
+	}
+
 	export let errorTodos = null;
 	export let isLoading = false;
 	export let isAdding;
 	// export let isRemoving = false;
 	export let isToggling = false;
+	export let scrollOnAdd = undefined;
 
 	export function clearInput() {
 		inputText = '';
@@ -32,6 +68,7 @@
 		prevTodos = todos; // ... so, we update the prevTodos to the current value of `todos`
 	}
 
+	// $: console.log(todos);
 	// $: if (success) {
 	// 	setTimeout(() => {
 	// 		success = false;
@@ -45,7 +82,13 @@
 	// Watchers
 	afterUpdate(() => {
 		if (autoscroll) {
-			listDiv.scrollTo(0, listDivScrollHeight);
+			if (scrollOnAdd === 'top') {
+				listDiv.scrollTo(0, 0);
+			} else if (scrollOnAdd === 'bottom') {
+				listDiv.scrollTo(0, listDiv.scrollHeight);
+			}
+
+			autoscroll = false;
 			// const p = document.createElement('p');
 			// p.textContent = 'Successfully added new todo!';
 			// divWrapper.appendChild(p);
@@ -74,47 +117,77 @@
 
 <div bind:this={divWrapper} class="todo-list-wrapper">
 	<!-- {@debug isLoading, errorTodos, todos} -->
+	<slot name="title">Todos</slot>
 	{#if isLoading}
 		<p class="state-text">Loading todos...</p>
 	{:else if errorTodos}
 		<p class="state-text">{errorTodos}</p>
 		<!-- {/if} -->
 	{:else if todos}
-		<div bind:this={listDiv} class="todo-list">
+		<div
+			bind:this={listDiv}
+			class="todo-list"
+			style="scroll-behavior: smooth;"
+		>
 			<div bind:offsetHeight={listDivScrollHeight}>
 				{#if todos.length === 0}
 					<!-- {console.log(todos)} -->
 					<p class="state-text">No todos to display</p>
 				{:else}
-					<ul>
-						{#each todos as { id, title, completed, removed } (id)}
-							<li class:completed={completed}>
-								<label>
-									<input
-										type="checkbox"
-										checked={completed}
-										disabled={isToggling || removed}
-										on:change={() =>
-											dispatchToggleTodo(id, !completed)}
-									/>
-									{title}
-								</label>
-								<button
-									disabled={isToggling || removed}
-									class="remove-todo-button"
-									aria-label="Remove todo: {title}"
-									on:click={() => dispatchRemoveTodo(id)}
-								>
-									<span
-										style:width="10px"
-										style:display="inline-block"
-									>
-										<FaRegTrashAlt />
-									</span>
-								</button>
-							</li>
+					<div style:display="flex">
+						{#each [notDoneTodos, doneTodos] as list, index}
+							<div class="list-wrapper">
+								<h2>{index === 0 ? 'todo' : 'done'}</h2>
+								<ul>
+									{#each list as todo (todo.id)}
+										<li animate:flip={{ duration: 300 }}>
+											<div
+												class:completed={todo.completed}
+												in:receive|local={{
+													key: todo.id,
+												}}
+												out:send|local={{
+													key: todo.id,
+												}}
+											>
+												<label>
+													<input
+														type="checkbox"
+														checked={todo.completed}
+														disabled={isToggling ||
+															todo.removed}
+														on:change={() =>
+															dispatchToggleTodo(
+																todo.id,
+																!todo.completed,
+															)}
+													/>
+													{todo.title}
+												</label>
+												<button
+													disabled={isToggling ||
+														todo.removed}
+													class="remove-todo-button"
+													aria-label="Remove todo: {todo.title}"
+													on:click={() =>
+														dispatchRemoveTodo(
+															todo.id,
+														)}
+												>
+													<span
+														style:width="10px"
+														style:display="inline-block"
+													>
+														<FaRegTrashAlt />
+													</span>
+												</button>
+											</div>
+										</li>
+									{/each}
+								</ul>
+							</div>
 						{/each}
-					</ul>
+					</div>
 				{/if}
 			</div>
 		</div>
@@ -135,9 +208,10 @@
 		>
 	</form>
 </div>
-{#if isAdding === false}
+
+<!-- {#if isAdding === false}
 	<p>Success!</p>
-{/if}
+{/if} -->
 
 <!-- {#if action === 'addTodo'}
 	{#if isLoading}
@@ -153,19 +227,36 @@
 	.todo-list-wrapper {
 		background-color: #424242;
 		border: 1px solid #4b4b4b;
+		:global(h3) {
+			text-align: center;
+		}
 		.state-text {
 			margin: 0;
 			padding: 15px;
 			text-align: center;
 		}
 		.todo-list {
-			max-height: 200px;
+			max-height: 400px;
 			overflow: auto;
+			.list-wrapper {
+				// margin: 0 5px;
+				padding: 5px;
+				flex: 1;
+				// text-align: center;
+				h2 {
+					// background-color: #7d7c7c;
+					margin: 0;
+					padding: 10px;
+					color: var(--buttonBgColor);
+					font-style: italic;
+					border-radius: 5px;
+				}
+			}
 			ul {
 				margin: 0;
 				padding: 10px;
 				list-style: none;
-				li {
+				li > div {
 					margin-bottom: 5px;
 					display: flex;
 					align-items: center;

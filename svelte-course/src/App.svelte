@@ -2,6 +2,9 @@
 	import ToDoList from './lib/ToDoList.svelte';
 	import { tick, onMount } from 'svelte';
 	import { v4 as uuid } from 'uuid';
+	import { fly } from 'svelte/transition';
+	import spin from './lib/transitions/spin.js';
+	import fade from './lib/transitions/fade.js';
 
 	let todolist;
 	let showList = true;
@@ -12,7 +15,7 @@
 	let isAdding;
 	let isToggling = false;
 
-	$: console.log(todos);
+	// $: console.log(todos);
 
 	onMount(() => {
 		loadTodos();
@@ -99,7 +102,7 @@
 				},
 				errorMessage,
 			);
-			todos = [...todos, { ...todoItem, id: uuid() }];
+			todos = [{ ...todoItem, id: uuid() }, ...todos];
 		} catch (error) {
 			errorTodos = errorMessage;
 		}
@@ -145,10 +148,9 @@
 			},
 			'🚨 Failed to toggle todo',
 		);
-		console.log(todo);
 		todos = todos.map(item => {
 			if (item.id === e.detail.id) {
-				item = todo;
+				item.completed = e.detail.completed;
 			}
 
 			return item;
@@ -166,7 +168,11 @@
 	<!-- {#await promise}
 		<p>Loading todos...</p>
 	{:then todos} -->
-	<div style:max-width="400px">
+	<div
+		transition:fade={{ duration: 1000 }}
+		style:max-width="800px"
+		style:display="flex"
+	>
 		<!-- <p>{isLoading}</p>
 		<p>{errorTodos}</p> -->
 		<ToDoList
@@ -175,14 +181,30 @@
 			isToggling={isToggling}
 			errorTodos={errorTodos}
 			todos={todos}
+			scrollOnAdd={'top'}
 			bind:this={todolist}
 			on:addTodo={handleAddTodo}
 			on:removeTodo={handleRemoveTodo}
 			on:toggleTodo={handleToggleTodo}
 		>
-			<!-- ... -->
-		</ToDoList>
+			<h3 slot="title" style="text-aling: center;">
+				Your Todo List
+			</h3></ToDoList
+		>
 	</div>
+	{#if todos}
+		<p>
+			Number of todos: {#key todos.length}<span
+					in:fly|local={{
+						// delay: 1000,
+						duration: 500,
+						// x: 0,
+						y: -20,
+					}}
+					style="display: inline-block;">{todos.length}</span
+				>{/key}
+		</p>
+	{/if}
 	<!-- {:catch error}
 		{(console.log(error), '')}
 		<p>{error.message}</p>
