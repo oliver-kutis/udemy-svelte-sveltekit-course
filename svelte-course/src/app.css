@@ -1,6 +1,12 @@
 :root {
 	--buttonBgColor: #ff3e00;
 	--buttonTextColor: #fff;
-	color: white;
-	background-color: rgb(29, 28, 28);
+	--backgroundColor: #1d1d1d;
+	--textColor: #fff;
+}
+
+body {
+	background-color: var(--backgroundColor);
+	color: var(--textColor);
+	font-family: 'Montserrat', sans-serif;
 }

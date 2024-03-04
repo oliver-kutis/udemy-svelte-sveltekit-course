@@ -1,29 +1,42 @@
 <script>
 	import { onMount } from 'svelte';
-	import tippy from 'tippy.js';
-	import 'tippy.js/dist/tippy.css';
-	import tippyAction from './lib/actions/tippy.js';
+	import Home from './lib/pages/Home.svelte';
+	import Settings from './lib/pages/Settings.svelte';
+	import Head from './lib/Head.svelte';
+	import direction from './lib/stores/direction';
+	// import location from './lib/stores/location.js';
 
-	let button;
-	let content = 'Hello';
-
+	let location;
+	function onRouteChange() {
+		location = window.location.hash.slice(1) || '/';
+	}
 	onMount(() => {
-		tippy('.tooltip', {
-			content: 'I am a tooltip',
-		});
-		tippy(button, {
-			content: 'I am a tooltip',
-		});
+		onRouteChange();
+		document.body.dir = $direction;
 	});
+
+	$: document.body.dir = $direction;
+	$: console.log($direction);
 </script>
 
-<!-- <button class="tooltip">Button</button>
-<button class="tooltip" data-tippy-content="Some other text">Button</button>
-<button bind:this={button}>Button</button> -->
-<input bind:value={content} type="text" />
-<button use:tippyAction={{ content: content, theme: 'light' }}
-	>Action - Tippy</button
->
+<svelte:body dir={$direction} />
+<svelte:window on:hashchange={onRouteChange} />
+<nav>
+	<ul>
+		<li><a href="#/">Home</a></li>
+		<li><a href="#/settings">Settings</a></li>
+	</ul>
+</nav>
+
+<Head />
+
+{#if location === '/'}
+	<Home />
+{:else if location === '/settings'}
+	<Settings />
+{:else}
+	{((window.location.hash = '/'), '')}
+{/if}
 
 <style>
 </style>
