@@ -14,9 +14,6 @@
 		onRouteChange();
 		document.body.dir = $direction;
 	});
-
-	$: document.body.dir = $direction;
-	$: console.log($direction);
 </script>
 
 <svelte:body dir={$direction} />
