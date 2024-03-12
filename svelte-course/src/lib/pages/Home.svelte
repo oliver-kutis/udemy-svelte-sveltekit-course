@@ -1,64 +1,61 @@
 <script>
-	import Button from '../Button.svelte';
-	import { Form, Field } from '../form';
-	import {
-		validateRequiredField,
-		validateEmail,
-		validateMinLength,
-		validatePassword,
-	} from '../form/validators';
-	import { hasContext } from 'svelte';
+	import { Stage, Layer, Rect } from '../konva';
+	let showCanvas = true;
+	let x = 20;
+	let width = 200;
 </script>
 
-<Form
-	on:submit={e => {
-		// console.log(e.detail);
-	}}
-	initialValues={{}}
-	let:values
-	let:errors
->
-	<Field
-		name="username"
-		label="Username"
-		type="text"
-		validate={(value, label) => {
-			return (
-				validateRequiredField(value, label) ||
-				validateMinLength(value, label, 4)
-			);
-		}}
-	>
-		<p slot="error" let:error style:color="green">{error}</p>
-	</Field>
-	<Field
-		name="email"
-		label="Email"
-		type="email"
-		validate={(value, label) => {
-			return (
-				validateRequiredField(value, label) ||
-				validateEmail(value, label)
-			);
-		}}
-	>
-		<p slot="error" let:error style:color="green">{error}</p>
-	</Field>
-	<Field
-		name="password"
-		label="Password"
-		type="password"
-		validate={(value, label) => {
-			return (
-				validateRequiredField(value, label) ||
-				validateMinLength(value, label, 8) ||
-				validatePassword(value, label)
-			);
-		}}
-	>
-		<p slot="error" let:error>{error}</p>
-	</Field>
-	<Button type="submit" disabled={Object.keys(errors).length > 1} size="small"
-		>Submit</Button
-	>
-</Form>
+<label>
+	<input type="checkbox" bind:checked={showCanvas} />
+	Show Canvas
+</label>
+<label>
+	<input type="range" bind:value={x} min="20" max="500" />
+	Change X position
+</label>
+<label>
+	<input type="range" bind:value={width} min="20" max="700" />
+	Change width
+</label>
+<Stage width={width} height={500}>
+	{#if showCanvas}
+		<Layer
+			draggable={true}
+			x={x}
+			on:dragmove={e => console.log(e.detail)}
+			on:click={e => console.log(e.detail)}
+		>
+			<Rect
+				x={x}
+				y={20}
+				fill="blue"
+				width={200}
+				height={100}
+				stroke="black"
+				strokeWidth={1}
+				shadowColor="black"
+				shadowBlur={10}
+			></Rect>
+			<Rect
+				x={50}
+				y={50}
+				fill="pink"
+				width={200}
+				height={100}
+				stroke="black"
+				strokeWidth={1}
+			></Rect>
+		</Layer>
+	{/if}
+	<Layer>
+		<Rect
+			x={300}
+			y={100}
+			fill="green"
+			width={200}
+			height={100}
+			stroke="black"
+			strokeWidth={2}
+		></Rect>
+	</Layer>
+</Stage>
