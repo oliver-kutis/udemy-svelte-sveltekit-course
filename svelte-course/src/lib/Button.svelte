@@ -1,12 +1,33 @@
+<script context="module">
+	let buttonCount = 0;
+
+	export const getButtonCount = () => buttonCount;
+	export const incrementButtonCount = buttonCount => {
+		buttonCount++;
+		return buttonCount;
+	};
+</script>
+
 <script>
+	import { onDestroy, onMount } from 'svelte';
+
 	export let size = '';
 	export let shadow = false;
 	export let bgColor = 'inherit';
 	export let textColor = 'inherit';
 
 	let isLeftHovered;
+	onMount(() => {
+		buttonCount++;
+	});
+	onDestroy(() => {
+		buttonCount--;
+	});
+
+	buttonCount++;
 </script>
 
+<p>{buttonCount}</p>
 <button
 	on:click
 	style:--buttonBgColor={bgColor}
